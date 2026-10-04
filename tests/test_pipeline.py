@@ -71,7 +71,7 @@ class SafetyChecks(unittest.TestCase):
                 pipeline.upload_body(self.metadata, "es", visibility, kids, synthetic)
 
     def test_private_atomic_files_no_overwrite_and_no_symlinks(self):
-        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "draft.json"
             pipeline.write_private_json(path, self.metadata)
             self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
@@ -99,15 +99,20 @@ class SafetyChecks(unittest.TestCase):
     def test_analysis_cleans_up_remote_video_on_success_and_failure(self):
         args = SimpleNamespace(video="unused", sources="unused", output="unused", language="en")
         draft = {key: value for key, value in self.metadata.items() if key != "sources"}
-        for failure in (None, "api", "json", "processing", "timeout"):
+        for failure in (None, "upload", "interrupted", "api", "json", "processing", "timeout", "cleanup"):
             client = MagicMock()
             remote = SimpleNamespace(name="files/example", state=SimpleNamespace(
                 name="FAILED" if failure == "processing" else "PROCESSING" if failure == "timeout" else "ACTIVE"))
             client.files.upload.return_value = remote
             client.models.generate_content.return_value = SimpleNamespace(
                 text="invalid json" if failure == "json" else json.dumps(draft))
+            if failure in ("upload", "interrupted"):
+                error = KeyboardInterrupt if failure == "interrupted" else RuntimeError
+                client.files.upload.side_effect = error("private-response")
             if failure == "api":
                 client.models.generate_content.side_effect = RuntimeError("private-response")
+            if failure == "cleanup":
+                client.files.delete.side_effect = RuntimeError("private-response")
             with self.subTest(failure=failure), \
                  patch.object(pipeline, "video_path", return_value=Path("unused.mp4")), \
                  patch.object(pipeline, "read_json", return_value=self.metadata["sources"]), \
@@ -118,16 +123,26 @@ class SafetyChecks(unittest.TestCase):
                  patch.dict("os.environ", {"GEMINI_API_KEY": "offline-example"}), \
                  patch("google.genai.Client") as factory, \
                  patch.object(pipeline.time, "monotonic", side_effect=[0, 601]), \
-                 patch("sys.stdout", new=io.StringIO()):
+                 patch("sys.stdout", new=io.StringIO()), \
+                 patch("sys.stderr", new=io.StringIO()) as output:
                 factory.return_value.__enter__.return_value = client
-                if failure:
-                    with self.assertRaises((ValueError, RuntimeError, TimeoutError)):
+                if failure not in (None, "cleanup"):
+                    with self.assertRaises((ValueError, RuntimeError, TimeoutError, KeyboardInterrupt)):
                         pipeline.analyze(args)
                     write.assert_not_called()
                 else:
                     pipeline.analyze(args)
                     self.assertEqual(write.call_args.args[1], self.metadata)
-                client.files.delete.assert_called_once_with(name="files/example")
+                if failure in ("upload", "interrupted"):
+                    client.files.delete.assert_not_called()
+                    self.assertIn("no se pudo confirmar la subida", output.getvalue())
+                else:
+                    client.files.delete.assert_called_once_with(name="files/example")
+                    if failure == "cleanup":
+                        self.assertIn("no se pudo eliminar", output.getvalue())
+                    else:
+                        self.assertEqual(output.getvalue(), "")
+                self.assertNotIn("private-response", output.getvalue())
 
     def test_upload_success_uses_exact_reviewed_payload_and_preserves_video(self):
         args = SimpleNamespace(video="unused", metadata="unused", language="en")
@@ -227,7 +242,7 @@ class SafetyChecks(unittest.TestCase):
                     write.assert_called_once()
 
     def test_video_cannot_be_a_renamed_secret_or_a_symlink(self):
-        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as directory:
+        with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "video.mp4"
             path.write_bytes(b"not a video")
             with self.assertRaises(ValueError):

@@ -56,6 +56,12 @@ export GEMINI_API_KEY
 `gemini-flash-latest`. Comprueba disponibilidad, precios y tratamiento de datos
 en tu región. Las operaciones pueden generar costes.
 
+Al poner un cliente Gemini API a disposición de usuarios del Espacio Económico
+Europeo, Suiza o Reino Unido, sus [condiciones](https://ai.google.dev/gemini-api/terms)
+exigen utilizar servicios de pago: un proyecto con facturación activa para las
+peticiones API. Revisa cómo se aplica esta condición a tu distribución; publicar
+código no certifica su cumplimiento ni configura la facturación.
+
 ### YouTube OAuth
 
 1. Crea tu propio proyecto en [Google Cloud Console](https://console.cloud.google.com/).
@@ -94,6 +100,10 @@ tu confirmación.
 python3 youtube_pipeline.py analyze ~/Videos/video.mp4 \
   --sources ~/Documents/fuentes.json --language es
 ```
+
+La eliminación del archivo remoto de Gemini se intenta, no se garantiza. Si
+la subida no puede confirmarse, puede haber un archivo remoto sin eliminar:
+comprueba Files API antes de reintentarlo. Consulta los límites en [PRIVACY.md](PRIVACY.md).
 
 El borrador se guarda por defecto en
 `~/.local/share/notebooklm-youtube-generator/metadata.json`, con permisos `0600`.
@@ -142,11 +152,13 @@ python3 audit_public.py
 bash -n run.sh
 ```
 
-Las pruebas no utilizan cuentas ni la red. La auditoría examina todos los
-archivos locales, el índice y **todos los objetos Git locales, incluidos blobs
-no alcanzables**, buscando formatos comunes de secretos y archivos ajenos a
-la lista de publicación. Falla si hay vídeos, perfiles, `.env` reales u otros
-archivos no permitidos. No imprime los secretos detectados.
+Las pruebas no utilizan cuentas ni la red. La auditoría busca formatos comunes
+de secretos en los archivos locales y **todos los blobs Git locales, incluidos
+los no alcanzables**; comprueba también el índice y las rutas históricas contra
+la lista de publicación. No analiza secretos en mensajes o metadatos de commits
+ni tags: complementa este control con revisión del historial y Gitleaks.
+Falla si hay vídeos, perfiles, `.env` reales u otros archivos no permitidos.
+No imprime los secretos detectados.
 
 La `.gitignore` utiliza una lista explícita de archivos permitidos. Antes de
 añadir otro archivo, revisa su contenido y autorízalo deliberadamente. No uses

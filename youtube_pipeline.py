@@ -192,6 +192,10 @@ def analyze(args):
                 except Exception:
                     print("Aviso: no se pudo eliminar el archivo remoto de Gemini. "
                           "Revísalo en tu cuenta; no se muestran detalles privados.", file=sys.stderr)
+            else:
+                print("Aviso: no se pudo confirmar la subida a Gemini. Puede haber un archivo "
+                      "remoto sin eliminar; comprueba Files API antes de reintentarlo. "
+                      "No se muestran detalles privados.", file=sys.stderr)
     print("Borrador guardado. Revisa el vídeo, los hechos y los derechos, y edita el JSON antes de subirlo.")
 
 

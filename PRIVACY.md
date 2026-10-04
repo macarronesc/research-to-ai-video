@@ -55,9 +55,16 @@ la subida; `private` es el valor predeterminado.
 
 ## Conservación en los proveedores
 
-El archivo enviado a Gemini se elimina mediante Files API en un bloque de
-limpieza, también si el análisis falla. Si esa petición falla, el programa
-avisa: comprueba tu cuenta y la [política de Files API](https://ai.google.dev/gemini-api/docs/files).
+Cuando la subida devuelve un identificador, el programa intenta eliminar el
+archivo de Gemini mediante Files API en un bloque de limpieza, también si el
+análisis falla. Si la eliminación falla, el programa avisa. Si la subida falla
+antes de devolver el identificador, no se puede confirmar si Gemini guardó el
+archivo ni eliminarlo por su identificador: se avisa para que compruebes Files
+API antes de reintentarlo. Una terminación forzada del proceso puede impedir
+la limpieza y el aviso.
+
+Comprueba tu cuenta y la [política de Files API](https://ai.google.dev/gemini-api/docs/files),
+que actualmente indica la eliminación automática de archivos tras 48 horas.
 Eliminarlo no garantiza eliminar registros de seguridad, respuestas ni todas
 las copias que Google pueda conservar conforme a sus condiciones.
 
@@ -65,6 +72,12 @@ El tratamiento de datos en Gemini depende del país, la facturación y el
 servicio utilizado. Puede incluir conservación para seguridad y, donde las
 condiciones lo permitan, revisión humana o mejora de productos. No supongas
 que toda API gratuita ni toda API de pago tienen el mismo tratamiento.
+
+Al poner clientes Gemini API a disposición de usuarios del Espacio Económico
+Europeo, Suiza o Reino Unido, las condiciones exigen servicios de pago; para
+Gemini API, peticiones mediante un proyecto con facturación activa. Revisa la
+aplicación de esta condición antes de distribuir u ofrecer el cliente en esas
+regiones. Esta documentación y la publicación del código no certifican cumplimiento.
 
 - [Gemini API: condiciones](https://ai.google.dev/gemini-api/terms)
 - [Google: política de privacidad](https://policies.google.com/privacy)
