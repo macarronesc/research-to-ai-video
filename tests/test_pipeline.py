@@ -135,11 +135,11 @@ class SafetyChecks(unittest.TestCase):
                     self.assertEqual(write.call_args.args[1], self.metadata)
                 if failure in ("upload", "interrupted"):
                     client.files.delete.assert_not_called()
-                    self.assertIn("no se pudo confirmar la subida", output.getvalue())
+                    self.assertIn("upload could not be confirmed", output.getvalue())
                 else:
                     client.files.delete.assert_called_once_with(name="files/example")
                     if failure == "cleanup":
-                        self.assertIn("no se pudo eliminar", output.getvalue())
+                        self.assertIn("could not be deleted", output.getvalue())
                     else:
                         self.assertEqual(output.getvalue(), "")
                 self.assertNotIn("private-response", output.getvalue())
@@ -152,7 +152,7 @@ class SafetyChecks(unittest.TestCase):
         service.videos().insert().next_chunk.return_value = (None, {"id": "sample12345"})
         with patch.object(pipeline, "video_path", return_value=Path("unused.mp4")), \
              patch.object(pipeline, "read_json", return_value=self.metadata), \
-             patch("builtins.input", side_effect=["Reviewed title", "Reviewed description", "", "n", "s", "ACEPTO", "SUBIR"]), \
+             patch("builtins.input", side_effect=["Reviewed title", "Reviewed description", "", "n", "y", "ACCEPT", "UPLOAD"]), \
              patch.object(pipeline, "youtube_service", return_value=service), \
              patch("googleapiclient.http.MediaFileUpload"), \
              patch.object(pipeline, "notify_telegram") as notify, \
@@ -258,7 +258,7 @@ class SafetyChecks(unittest.TestCase):
         args = SimpleNamespace(video="unused", metadata="unused", language="es")
         with patch.object(pipeline, "video_path", return_value=Path("unused.mp4")), \
              patch.object(pipeline, "read_json", return_value=self.metadata), \
-             patch("builtins.input", side_effect=["", "", "", "n", "s", "NO"]), \
+             patch("builtins.input", side_effect=["", "", "", "n", "y", "NO"]), \
              patch.object(pipeline, "youtube_service") as service, \
              patch("sys.stdout", new=io.StringIO()):
             with self.assertRaises(ValueError):
@@ -272,7 +272,7 @@ class SafetyChecks(unittest.TestCase):
             {"id": "example-channel", "snippet": {"title": "Example channel"}}]}
         with patch.object(pipeline, "video_path", return_value=Path("unused.mp4")), \
              patch.object(pipeline, "read_json", return_value=self.metadata), \
-             patch("builtins.input", side_effect=["", "", "", "n", "s", "ACEPTO", "NO"]), \
+             patch("builtins.input", side_effect=["", "", "", "n", "y", "ACCEPT", "NO"]), \
              patch.object(pipeline, "youtube_service", return_value=service), \
              patch("sys.stdout", new=io.StringIO()):
             with self.assertRaises(ValueError):
@@ -280,9 +280,34 @@ class SafetyChecks(unittest.TestCase):
             service.videos.assert_not_called()
 
     def test_missing_boolean_answer_is_not_false(self):
-        for answer in ("", "yes", "false"):
+        for answer in ("", "yes", "false", "s"):
             with patch("builtins.input", return_value=answer), self.assertRaises(ValueError):
                 pipeline.choose_boolean("Example")
+
+    def test_english_confirmations_remain_explicit(self):
+        with patch("builtins.input", return_value="ACCEPT") as prompt:
+            pipeline.confirm("Example consent")
+            self.assertIn("Type ACCEPT", prompt.call_args.args[0])
+        for answer in ("", "accept", "yes", "NO"):
+            with patch("builtins.input", return_value=answer), self.assertRaises(ValueError):
+                pipeline.confirm("Example consent")
+        for answer, expected in (("y", True), ("Y", True), ("n", False)):
+            with patch("builtins.input", return_value=answer) as prompt:
+                self.assertEqual(pipeline.choose_boolean("Example declaration"), expected)
+                self.assertIn("y/n, no default", prompt.call_args.args[0])
+
+    def test_cli_defaults_to_english_and_keeps_spanish_available(self):
+        for command in ("analyze", "upload"):
+            for language in (None, "es"):
+                arguments = ["youtube_pipeline.py", command, "unused.mp4"]
+                if command == "analyze":
+                    arguments += ["--sources", "unused.json"]
+                if language:
+                    arguments += ["--language", language]
+                with self.subTest(command=command, language=language), \
+                     patch("sys.argv", arguments), patch.object(pipeline, command) as operation:
+                    self.assertEqual(pipeline.main(), 0)
+                    self.assertEqual(operation.call_args.args[0].language, language or "en")
 
     def test_cli_errors_do_not_print_private_exception_content(self):
         secret = "private-" + "exception-content"

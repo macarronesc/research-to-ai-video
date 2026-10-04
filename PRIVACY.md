@@ -1,92 +1,95 @@
-# Privacidad y consentimiento del cliente local
+# Privacy and consent for the local client
 
-Esta herramienta funciona en el equipo de quien la ejecuta. El repositorio no
-opera un servidor ni recibe tus datos o credenciales. Al utilizarla aceptas esta
-información, las [condiciones de YouTube](https://www.youtube.com/t/terms) y las
-condiciones de los demás servicios que hayas elegido. El programa solicita
-aceptación explícita antes de enviar datos y confirmación final antes de subir.
+This tool runs on the operator's own computer. The repository does not operate
+a server or receive your data or credentials. Using the tool requires acceptance
+of this notice, [YouTube's terms](https://www.youtube.com/t/terms), and the terms
+of any other services you choose to use. The CLI asks for explicit consent
+before sending data and final confirmation before uploading to YouTube.
 
-## Datos y destinatarios
+## Data and recipients
 
-| Operación | Datos enviados | Destinatario |
+| Operation | Data sent | Recipient |
 | --- | --- | --- |
-| `analyze` | Vídeo local, fuentes seleccionadas, instrucciones y clave para autenticar la petición | Gemini API / Google |
-| OAuth | Solicitud de permisos y consentimiento mediante el navegador de Google | Google |
-| Identificación del canal | Token OAuth; recibe ID y nombre del canal para mostrarlos | YouTube Data API |
-| `upload` | Vídeo, título, descripción, etiquetas, idioma, privacidad y declaraciones infantiles/IA; token OAuth | YouTube |
-| Aviso opcional | Identificador del chat, credencial del bot y mensaje genérico | Telegram Bot API |
-| `revoke` | Token de esta aplicación que debe revocarse | Google OAuth |
+| `analyze` | Local video, selected sources, instructions, and the key used to authenticate the request | Gemini API / Google |
+| OAuth | Requested permissions and browser-based consent | Google |
+| Channel identification | OAuth token; receives the channel ID and name for display | YouTube Data API |
+| `upload` | Video, title, description, tags, language, visibility, made-for-kids and synthetic-content declarations; OAuth token | YouTube |
+| Optional notification | Chat identifier, bot credential, and a generic completion message | Telegram Bot API |
+| `revoke` | The application's token to be revoked | Google OAuth |
 
-No se envían contraseñas o cookies a este programa. No hay telemetría, publicidad,
-consulta de estadísticas ni registro propio de errores o respuestas API. Los
-proveedores reciben datos técnicos como la IP y aplican sus propias políticas.
-Las URLs de fuentes deben ser públicas y no contener secretos, enlaces firmados
-o información identificativa. Los ejemplos del repositorio no contienen datos reales.
+The tool does not collect browser passwords or cookies. It has no application
+telemetry, advertising, statistics collection, or dedicated logs of API errors
+and responses. Providers receive technical information such as your IP address
+and apply their own policies. Source URLs must be public and contain no secrets,
+signed access links, or identifying information. Repository examples are fictional.
 
-No envíes datos personales, sensibles o confidenciales. Necesitas los derechos
-necesarios para enviar el vídeo a Gemini y publicarlo en YouTube. Solo utiliza
-Telegram con un bot y un chat autorizados. La disponibilidad regional, costes y
-verificaciones dependen de los proveedores.
+Do not submit personal, sensitive, or confidential information. You need the
+necessary rights to send the video to Gemini and publish it on YouTube. Use
+Telegram only with an authorized bot and chat. Regional availability, charges,
+and verification requirements depend on the providers.
 
-## Conservación local y control
+## Local retention and control
 
-- El cliente OAuth y el token se guardan fuera del repositorio en
-  `$XDG_CONFIG_HOME/notebooklm-youtube-generator/` o, por defecto,
+- OAuth configuration and tokens are stored outside the repository under
+  `$XDG_CONFIG_HOME/notebooklm-youtube-generator/`, defaulting to
   `~/.config/notebooklm-youtube-generator/`.
-- Los borradores se guardan en `$XDG_DATA_HOME/notebooklm-youtube-generator/` o
-  `~/.local/share/notebooklm-youtube-generator/`, salvo que elijas otra ruta.
-- Los archivos creados por la herramienta tienen permisos `0600`; sus carpetas
-  predeterminadas tienen permisos `0700`. Esto no protege frente a un usuario
-  con acceso a tu cuenta del sistema o a tus copias de seguridad.
-- La herramienta no retiene historial de visualizaciones, IDs de vídeos o datos
-  de otros usuarios. Los borradores, vídeos y fuentes permanecen en tu equipo
-  hasta que decidas eliminarlos o exportarlos; no se borran automáticamente.
-- Los metadatos y fuentes son JSON, y los vídeos son archivos locales: puedes
-  exportarlos o eliminarlos directamente. Si decides dejar de usar la aplicación,
-  revoca el acceso y elimina los archivos privados que ya no necesites.
+- Drafts are stored under `$XDG_DATA_HOME/notebooklm-youtube-generator/`,
+  defaulting to `~/.local/share/notebooklm-youtube-generator/`, unless you select
+  another output location.
+- Files created by the tool have permissions `0600`; its default application
+  directories have permissions `0700`. These controls do not protect against
+  someone with access to your operating-system account or backups.
+- The tool does not retain view-count histories, video IDs, or other users' data.
+  Drafts, videos, and source manifests remain on your computer until you choose
+  to delete or export them. They are not automatically removed.
+- Metadata and sources are plain JSON, and videos remain local files. You can
+  export or delete them directly. When you stop using the application, revoke
+  its access and remove private files you no longer need.
 
-El comando `revoke` intenta revocar inmediatamente la autorización OAuth en
-Google y elimina el token local solo tras confirmar éxito. Alternativamente,
-usa [las conexiones de tu cuenta](https://myaccount.google.com/connections).
-Eliminar el token o un borrador local **no elimina vídeos ni datos en YouTube**.
-Para modificar o eliminar un vídeo utiliza YouTube Studio. No hay publicación
-programada: seleccionar `public` o `unlisted` hace efectiva esa visibilidad en
-la subida; `private` es el valor predeterminado.
+The `revoke` command attempts to revoke the OAuth authorization immediately
+with Google. It deletes the local token only after receiving confirmation of
+success. Alternatively, use [your Google account connections](https://myaccount.google.com/connections).
+Deleting a token or local draft **does not delete videos or data on YouTube**.
+Use YouTube Studio to change or remove published content. No publication is
+scheduled: selecting `public` or `unlisted` requests that visibility on upload;
+`private` is the default.
 
-## Conservación en los proveedores
+## Provider retention and cleanup
 
-Cuando la subida devuelve un identificador, el programa intenta eliminar el
-archivo de Gemini mediante Files API en un bloque de limpieza, también si el
-análisis falla. Si la eliminación falla, el programa avisa. Si la subida falla
-antes de devolver el identificador, no se puede confirmar si Gemini guardó el
-archivo ni eliminarlo por su identificador: se avisa para que compruebes Files
-API antes de reintentarlo. Una terminación forzada del proceso puede impedir
-la limpieza y el aviso.
+When a Gemini upload returns a file identifier, the program attempts to delete
+that file through the Files API in a cleanup block, including when analysis
+fails. If deletion fails, it displays a warning. If an upload fails before
+returning an identifier, the program cannot confirm whether Gemini stored the
+file or delete it by identifier. It warns you to check the Files API before
+retrying. Forcefully terminating the process can prevent cleanup and warnings.
 
-Comprueba tu cuenta y la [política de Files API](https://ai.google.dev/gemini-api/docs/files),
-que actualmente indica la eliminación automática de archivos tras 48 horas.
-Eliminarlo no garantiza eliminar registros de seguridad, respuestas ni todas
-las copias que Google pueda conservar conforme a sus condiciones.
+Check your account and the [Files API documentation](https://ai.google.dev/gemini-api/docs/files),
+which states that uploaded files are automatically deleted after 48 hours as
+of the documented review. File deletion does not guarantee deletion of security
+logs, responses, or every copy Google may retain under its terms.
 
-El tratamiento de datos en Gemini depende del país, la facturación y el
-servicio utilizado. Puede incluir conservación para seguridad y, donde las
-condiciones lo permitan, revisión humana o mejora de productos. No supongas
-que toda API gratuita ni toda API de pago tienen el mismo tratamiento.
+Gemini data handling depends on your country, billing configuration, and the
+service used. It can include retention for security and, where the terms permit,
+human review or product improvement. Do not assume that all free services or
+all paid services handle data in the same way.
 
-Al poner clientes Gemini API a disposición de usuarios del Espacio Económico
-Europeo, Suiza o Reino Unido, las condiciones exigen servicios de pago; para
-Gemini API, peticiones mediante un proyecto con facturación activa. Revisa la
-aplicación de esta condición antes de distribuir u ofrecer el cliente en esas
-regiones. Esta documentación y la publicación del código no certifican cumplimiento.
+When making Gemini API clients available to users in the EEA, Switzerland, or
+the UK, the terms require Paid Services. For Gemini API, requests must use a
+project with active billing. Review how this requirement applies before
+distributing or offering the client in those regions. This notice and the
+publication of source code do not certify compliance.
 
-- [Gemini API: condiciones](https://ai.google.dev/gemini-api/terms)
-- [Google: política de privacidad](https://policies.google.com/privacy)
-- [Telegram: política de privacidad](https://telegram.org/privacy)
+- [Gemini API terms](https://ai.google.dev/gemini-api/terms)
+- [Google Privacy Policy](https://policies.google.com/privacy)
+- [Telegram Privacy Policy](https://telegram.org/privacy)
 
-El cliente se distribuye como código local, no como un servicio gestionado para
-terceros. Las cuestiones de configuración y borrado local pueden plantearse
-al mantenedor mediante los Issues del repositorio donde obtuviste el código,
-**sin adjuntar secretos, vídeos privados o tokens**. Las solicitudes relativas
-a datos alojados en Google o Telegram deben dirigirse a esos proveedores.
-Si despliegas este código para otros usuarios, publica tus propios datos de
-contacto y adapta esta información a tu tratamiento real antes de ofrecerlo.
+## Questions and deployment for other users
+
+This client is distributed as local source code, not a managed third-party
+service. Questions about configuration or local deletion can be raised with
+the maintainer through the repository's Issues, **without attaching secrets,
+private videos, or tokens**. Requests concerning data hosted by Google or
+Telegram must be directed to those providers.
+
+If you deploy this code for other users, publish your own contact information
+and adapt this notice to your actual data processing before offering the service.

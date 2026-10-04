@@ -1,75 +1,127 @@
-# NotebookLM → Gemini → YouTube: flujo editorial revisado
+# Source to Screen
 
-Proyecto de portfolio que integra análisis audiovisual con Gemini, OAuth y
-subidas mediante YouTube Data API. Admite contenido en español e inglés y
-notificaciones opcionales por Telegram. No es un producto oficial de Google.
+**AI-assisted video publishing with human review at every publishing boundary.**
 
-## Historial de esta edición
+Turn a video created in NotebookLM into a reviewed YouTube upload: draft metadata
+with Gemini, edit it locally, authorize the destination channel, and publish
+through the official YouTube Data API. Optional Telegram notifications close the
+loop without sharing video details.
 
-Esta edición deriva de un prototipo privado anterior. Para facilitar su revisión,
-el historial público se ha reconstruido por etapas técnicas a partir de la
-versión saneada. Las fechas son reales y corresponden a esta preparación; no
-representan la cronología original del desarrollo privado.
+Python 3.11+ · Linux · [MIT license](LICENSE)
 
-## Flujo y límites
+## Why this project
 
-1. Elige un tema y revisa fuentes y permisos.
-2. Genera el Video Overview **manualmente** en NotebookLM y descarga el vídeo.
-3. La API de Gemini prepara un borrador de metadatos, con tu autorización.
-4. Revisa el vídeo completo, contrasta los hechos y edita los metadatos.
-5. El programa muestra el canal y los datos exactos; solo sube tras confirmar.
+Preparing a video for publication involves more than generating its content.
+Metadata needs editing, sources need attribution, the correct account needs
+authorization, and visibility and content disclosures need deliberate choices.
 
-La versión histórica automatizaba la web. Esta versión pública **no incluye
-Playwright, cookies, perfiles, ocultación de automatización, scraping, APIs
-privadas ni reutilización de resultados de Google Search grounding**. No se
-programan publicaciones, no se borran vídeos/notebooks y no se recopilan
-estadísticas de YouTube. La privacidad predeterminada es `private`.
+Source to Screen automates the repeatable API work while keeping those editorial
+decisions with the person publishing. It is a local, human-in-the-loop workflow,
+not an unattended content-generation service.
 
-La herramienta no verifica automáticamente hechos, licencias ni la idoneidad
-para monetización. Usar IA o citar una fuente no concede derechos sobre ella.
-No envíes datos personales, credenciales o información confidencial a los servicios.
+| Capability | What it contributes |
+| --- | --- |
+| Multimodal metadata drafting | Gemini analyzes the actual video to propose a title, description, and tags. |
+| Explicit publishing approval | The CLI shows the authorized channel and exact request before uploading. |
+| Account-aware integration | OAuth handles access to YouTube; no browser passwords or session cookies are collected. |
+| Conservative defaults | Uploads default to private, drafts are not overwritten, and source videos are never deleted. |
+| Inspectable data | Sources and metadata are plain JSON that you can review, edit, export, or prepare manually. |
+| Testable safety boundaries | Offline tests cover validation, consent, credentials, failure handling, and remote cleanup. |
 
-## Instalación
+The project demonstrates practical integration of asynchronous AI file processing,
+OAuth, resumable media uploads, consent checkpoints, and publication auditing.
+It does **not** independently verify facts, source licenses, or monetization eligibility.
 
-Requiere Python 3.11+ en Linux, una cuenta adulta de Google y acceso a las APIs.
-Revisa y acepta [la información de privacidad](PRIVACY.md) antes de utilizarlo.
+## Workflow
 
-```bash
-python3 -m venv ~/.venvs/notebooklm-youtube-generator
-source ~/.venvs/notebooklm-youtube-generator/bin/activate
-pip install -r requirements.txt
+```text
+Select and review sources
+          │
+          ▼
+NotebookLM: generate and download a Video Overview [manual]
+          │
+          ▼
+Gemini API: analyze the local video and draft metadata [optional]
+          │
+          ▼
+Watch the video, check facts and rights, edit the JSON [manual]
+          │
+          ▼
+YouTube Data API: identify channel → review settings → confirm upload
+          │
+          ▼
+Telegram Bot API: send a generic completion notice [optional]
 ```
 
-### Gemini
+**NotebookLM generation and download are manual.** This public edition does not
+automate the NotebookLM website, use private APIs, scrape services, conceal bots,
+or reuse Google Search grounding results. It does not collect YouTube statistics,
+schedule publication, or delete videos or notebooks.
 
-Obtén tu propia clave en [Google AI Studio](https://aistudio.google.com/apikey).
-No la escribas en código, ejemplos, commits, capturas o argumentos de comandos.
-Este ejemplo solicita el secreto sin incluirlo en el historial de la shell:
+## Getting started
+
+### Requirements
+
+- Python **3.11 or later** on Linux. Credential-file protections use POSIX APIs;
+  Windows is not supported by this implementation.
+- A Google account and access to the services you choose to use. Gemini API
+  users must be at least 18 years old.
+- A Gemini API key for analysis, and/or your own Google Cloud OAuth client for
+  YouTube uploads. Gemini analysis is optional.
+- An MP4 or WebM video, no larger than **2 GiB**, and reviewed source information.
+- Acceptance of [PRIVACY.md](PRIVACY.md) and the applicable provider terms.
+
+### 1. Install
+
+```bash
+git clone https://github.com/macarronesc/notebooklm-youtube-generator.git
+cd notebooklm-youtube-generator
+
+python3 -m venv ~/.venvs/notebooklm-youtube-generator
+source ~/.venvs/notebooklm-youtube-generator/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+The runtime uses three Google SDKs. Their transitive dependencies are pinned in
+`requirements.txt`; testing and security-audit tools are not runtime dependencies.
+
+### 2. Configure Gemini
+
+Create your own key in [Google AI Studio](https://aistudio.google.com/apikey).
+Read it without putting the value into shell history or displaying it:
 
 ```bash
 read -rs -p 'Gemini API key: ' GEMINI_API_KEY
 export GEMINI_API_KEY
 ```
 
-`.env.example` es solo una referencia con campos vacíos; **no se carga**.
-`GEMINI_MODEL` permite elegir un modelo disponible; su valor predeterminado es
-`gemini-flash-latest`. Comprueba disponibilidad, precios y tratamiento de datos
-en tu región. Las operaciones pueden generar costes.
+`.env.example` is a reference only: it contains empty credential fields and is
+**not loaded automatically**. Do not put secrets in command arguments, source
+files, screenshots, commits, or issue reports.
 
-Al poner un cliente Gemini API a disposición de usuarios del Espacio Económico
-Europeo, Suiza o Reino Unido, sus [condiciones](https://ai.google.dev/gemini-api/terms)
-exigen utilizar servicios de pago: un proyecto con facturación activa para las
-peticiones API. Revisa cómo se aplica esta condición a tu distribución; publicar
-código no certifica su cumplimiento ni configura la facturación.
+| Environment variable | Purpose | Default |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | Authenticate video analysis | Required for `analyze` |
+| `GEMINI_MODEL` | Select an available video-capable model | `gemini-flash-latest` |
+| `TELEGRAM_BOT_TOKEN` | Authenticate optional notifications | Disabled unless both Telegram variables are set |
+| `TELEGRAM_CHAT_ID` | Destination chat you control | No default |
+| `XDG_CONFIG_HOME` | Base directory for local OAuth files | `~/.config` |
+| `XDG_DATA_HOME` | Base directory for metadata drafts | `~/.local/share` |
 
-### YouTube OAuth
+Check model availability, pricing, and data handling in your region. API calls
+can incur charges. When making Gemini API clients available to users in the
+EEA, Switzerland, or the UK, the [Gemini terms](https://ai.google.dev/gemini-api/terms)
+require Paid Services: API requests through a project with active billing.
+Publishing source code does not configure billing or certify compliance.
 
-1. Crea tu propio proyecto en [Google Cloud Console](https://console.cloud.google.com/).
-2. Habilita YouTube Data API v3 y configura correctamente el consentimiento OAuth.
-3. Crea un cliente OAuth de tipo **Desktop app**, no de tipo web.
-4. Guarda el JSON descargado como
+### 3. Configure YouTube OAuth
+
+1. Create your own project in [Google Cloud Console](https://console.cloud.google.com/).
+2. Enable **YouTube Data API v3** and configure the OAuth consent screen.
+3. Create an OAuth client of type **Desktop app**, not a web client.
+4. Download its configuration. Store it outside the repository at
    `~/.config/notebooklm-youtube-generator/client_secret.json`.
-5. Protege la carpeta y el archivo:
+5. Restrict access to the directory and file:
 
 ```bash
 mkdir -p ~/.config/notebooklm-youtube-generator
@@ -77,74 +129,119 @@ chmod 700 ~/.config/notebooklm-youtube-generator
 chmod 600 ~/.config/notebooklm-youtube-generator/client_secret.json
 ```
 
-El navegador realiza el consentimiento OAuth normal. No se guardan contraseñas
-ni cookies del navegador. Los permisos son `youtube.upload` para subir y
-`youtube.readonly` para identificar el canal autorizado; no se almacenan sus
-estadísticas. El token local se guarda con permisos `0600`, fuera del repositorio.
+If you set `XDG_CONFIG_HOME`, use that location instead. On first use, Google
+opens the standard browser consent flow. The saved token has permissions `0600`.
 
-La verificación OAuth, sus excepciones para uso personal y la auditoría de
-YouTube son procesos distintos. Los proyectos API no verificados sujetos a la
-restricción de YouTube pueden subir únicamente en privado. No intentes eludirla.
-Hacer público este repositorio no equivale a publicar una aplicación OAuth.
+| OAuth scope | Why it is requested |
+| --- | --- |
+| `youtube.upload` | Upload the video you approve. |
+| `youtube.readonly` | Identify and display the authorized channel before uploading. No statistics are collected. |
 
-## Uso
+OAuth verification and the YouTube API compliance audit are separate processes.
+API projects subject to [YouTube's unverified-project restriction](https://developers.google.com/youtube/v3/docs/videos/insert)
+can upload only in private mode. Do not attempt to bypass it. Publishing this
+repository does not publish or verify your OAuth application.
 
-Guarda los vídeos, fuentes y borradores **fuera de este repositorio**. Los ejemplos
-de `examples/` son ficticios: no son fuentes verificadas ni permisos válidos.
-Cada fuente debe indicar `title`, `url`, `author` y `license`; verifica tú mismo
-sus derechos y evita enlaces privados o firmados. Las atribuciones exigidas
-deben añadirse a la descripción: el programa no modifica el texto después de
-tu confirmación.
+## Usage
+
+### Prepare sources and a video
+
+Use NotebookLM to generate and download your video manually. Keep videos,
+source manifests, drafts, and credentials **outside this repository**.
+
+Copy [sources.example.json](examples/sources.example.json) to a private working
+location, then replace its fictional entries with your reviewed sources. Each
+entry needs `title`, `url`, `author`, and `license`. Use public URLs without
+credentials, signed access links, or personal information.
+
+The examples are format demonstrations, **not verified sources or valid permissions**.
+Recording a license does not verify it, and attribution alone does not grant
+permission. Add any required credits to the video description yourself; the
+program does not append text after your approval.
+
+### Draft metadata with Gemini
 
 ```bash
 python3 youtube_pipeline.py analyze ~/Videos/video.mp4 \
-  --sources ~/Documents/fuentes.json --language es
+  --sources ~/Documents/sources.json --language en
 ```
 
-La eliminación del archivo remoto de Gemini se intenta, no se garantiza. Si
-la subida no puede confirmarse, puede haber un archivo remoto sin eliminar:
-comprueba Files API antes de reintentarlo. Consulta los límites en [PRIVACY.md](PRIVACY.md).
+You must type `ACCEPT` before the video and source manifest are sent to Gemini.
+The default draft location is:
 
-El borrador se guarda por defecto en
-`~/.local/share/notebooklm-youtube-generator/metadata.json`, con permisos `0600`.
-No se sobrescriben borradores existentes: usa `--output` con otra ruta para
-vídeos posteriores. Edita el JSON y verifica el vídeo antes de continuar:
+```text
+~/.local/share/notebooklm-youtube-generator/metadata.json
+```
+
+Drafts are written with permissions `0600` and never overwritten. For another
+video, choose a new `--output` path. Watch the complete video, check its facts
+and rights, and edit the JSON before proceeding.
+
+Gemini file deletion is **best effort**. A failed upload may leave a remote file
+without a returned identifier. Check the Files API before retrying; see
+[data-retention limits](PRIVACY.md#provider-retention-and-cleanup).
+
+### Review and upload
 
 ```bash
-python3 youtube_pipeline.py upload ~/Videos/video.mp4 --language es
+python3 youtube_pipeline.py upload ~/Videos/video.mp4 --language en
 ```
 
-Puedes usar `--metadata` para seleccionar otro borrador y `--language en` para
-inglés. También puedes preparar metadatos manualmente, sin enviar nada a Gemini,
-siguiendo la estructura de `examples/metadata.example.json`.
+The CLI lets you edit the title and description, choose visibility, and explicitly
+answer `y` or `n` for made-for-kids and synthetic-content declarations. It then
+requests consent, identifies the authorized channel, and displays the exact API
+request. The upload starts **only after you type `UPLOAD`**.
 
-Durante la subida puedes modificar título, descripción y privacidad. Debes
-declarar explícitamente si el vídeo está creado para niños y si requiere aviso
-de contenido sintético. La confirmación final muestra el canal y el cuerpo
-exacto de la petición. Los fallos o cancelaciones devuelven un estado no cero;
-no se imprimen excepciones ni respuestas API privadas y no se elimina tu vídeo.
-Si una subida falla, comprueba YouTube Studio antes de volver a intentarlo:
-un error de red no prueba que el servidor no recibiera el archivo.
+- **Private is the default.** Selecting `public` or `unlisted` requests that
+  visibility immediately; there is no publication schedule.
+- English is the default content language. Use `--language es` for Spanish in
+  both commands. The CLI itself is in English.
+- Use `--metadata /path/to/draft.json` to select a different draft.
+- To skip Gemini entirely, prepare a draft using
+  [metadata.example.json](examples/metadata.example.json) as the format reference.
 
-Para revocar el acceso de esta aplicación:
+### Revoke access
 
 ```bash
 python3 youtube_pipeline.py revoke
 ```
 
-También puedes revocarlo en [las conexiones de tu cuenta de Google](https://myaccount.google.com/connections).
-Si falla la revocación remota, el token local no se borra silenciosamente.
+The local token is deleted only after Google confirms revocation. You can also
+revoke access through [your Google account connections](https://myaccount.google.com/connections).
+This does not delete drafts or videos on YouTube.
 
-### Telegram opcional
+### Optional Telegram notifications
 
-Configura `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` mediante variables de entorno,
-usando entrada oculta como para Gemini, y solo con un bot/chat que controles.
-Solo se envía un aviso genérico de subida completada: ningún título, URL del
-vídeo, ruta, archivo, estadística o error. No se realizan envíos masivos.
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` using hidden input, as for the
+Gemini key. Use only a bot and chat you control and are authorized to contact.
+The message is generic: no video title, URL, path, file, statistics, or API error
+is sent. Notification failure does not delete or repeat the uploaded video.
 
-## Verificación antes de publicar
+## Safety and failure handling
 
-Consulta el alcance y los resultados en [AUDIT.md](AUDIT.md).
+- Credentials and drafts live outside the repository. Default application
+  directories use `0700`; created private files use `0600`.
+- Credential reads check ownership and permissions. JSON reads reject symlinks
+  and oversized files; metadata validation rejects recognized secret patterns.
+- Source URLs, title length, UTF-8 description size, tags, and content declarations
+  are validated before publishing.
+- Cancellation and failure return a nonzero exit status. Private exception
+  messages and API responses are not printed.
+- Local videos and notebooks are never automatically deleted.
+
+These controls reduce risk; they do not prove that content is accurate, licensed,
+safe, or compliant. Source files remain your responsibility, and provider data
+handling follows their terms. Read [PRIVACY.md](PRIVACY.md) for the full data flow.
+
+| Problem | What to check |
+| --- | --- |
+| Analysis fails | API key, model availability, billing, quotas, video format, source JSON, and whether the output path already exists. |
+| Credential file is rejected | Desktop OAuth client type, file ownership, `0600` permissions, and the configured directory. |
+| Upload fails or its outcome is uncertain | Check YouTube Studio before retrying. A network failure does not prove the server rejected the video. |
+| Gemini cleanup cannot be confirmed | Inspect the Files API before retrying; do not assume the file was deleted. |
+| Revocation fails | Use Google's account connections. Removing a local token alone does not revoke remote access. |
+
+## Development and verification
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
@@ -152,47 +249,74 @@ python3 audit_public.py
 bash -n run.sh
 ```
 
-Las pruebas no utilizan cuentas ni la red. La auditoría busca formatos comunes
-de secretos en los archivos locales y **todos los blobs Git locales, incluidos
-los no alcanzables**; comprueba también el índice y las rutas históricas contra
-la lista de publicación. No analiza secretos en mensajes o metadatos de commits
-ni tags: complementa este control con revisión del historial y Gitleaks.
-Falla si hay vídeos, perfiles, `.env` reales u otros archivos no permitidos.
-No imprime los secretos detectados.
+Tests use mocked providers and do not access accounts or the network. The
+publication auditor checks working files, JSON/Python syntax, the Git index,
+historical paths, and **all local Git blobs, including unreachable objects**.
+It reports categories and locations, never secret values.
 
-La `.gitignore` utiliza una lista explícita de archivos permitidos. Antes de
-añadir otro archivo, revisa su contenido y autorízalo deliberadamente. No uses
-`git add -f` para introducir datos privados. Una auditoría por patrones no es
-una prueba matemática de ausencia de secretos; revisa también el diff y los
-archivos que subes, y activa la protección de secretos de GitHub.
+The included auditor does not scan commit/tag messages or metadata. Complement
+it with history review and an independent scanner such as Gitleaks:
 
-Este repositorio limpio no debe fusionarse con el historial privado original.
-No copies perfiles, `.git`, registros, tokens ni respaldos de ese repositorio.
-Las sesiones o credenciales ya compartidas deben revocarse en sus servicios:
-eliminar un archivo local no las invalida ni borra copias externas.
+```bash
+gitleaks dir . --redact=100
+gitleaks git . --log-opts=--all --redact=100
+```
 
-## Políticas y responsabilidad
+See [AUDIT.md](AUDIT.md) for dated findings and verification limits. A clean
+pattern scan is not proof that every possible secret or vulnerability is absent.
+Re-audit dependencies before updates and enable GitHub secret protection.
 
-La versión está diseñada para reducir riesgos, no para certificar legalidad,
-cumplimiento absoluto o seguridad futura. Revisa las políticas vigentes y tus
-fuentes antes de utilizar o distribuir un cliente. Si ofreces un servicio a
-terceros, necesitas adaptar consentimiento, privacidad, seguridad, verificación
-y mecanismos de eliminación; esta herramienta es local, no un SaaS.
+### Repository layout
 
-- [NotebookLM: términos y derechos](https://support.google.com/notebooklm/answer/17004255)
-- [NotebookLM: descarga de Video Overviews](https://support.google.com/notebooklm/answer/16454555)
-- [Gemini API: condiciones y tratamiento de datos](https://ai.google.dev/gemini-api/terms)
-- [YouTube: términos](https://www.youtube.com/t/terms),
-  [políticas API](https://developers.google.com/youtube/terms/developer-policies) y
-  [funcionalidad mínima](https://developers.google.com/youtube/terms/required-minimum-functionality)
-- [YouTube: restricción de proyectos no verificados](https://developers.google.com/youtube/v3/docs/videos/insert)
-- [YouTube: contenido sintético](https://support.google.com/youtube/answer/14328491),
-  [contenido infantil](https://support.google.com/youtube/answer/9528076),
-  [spam](https://support.google.com/youtube/answer/2801973) y
-  [monetización](https://support.google.com/youtube/answer/1311392)
-- [Telegram: condiciones para desarrolladores](https://telegram.org/tos/bot-developers)
-- [UE: transparencia de contenido generado con IA](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act)
+```text
+youtube_pipeline.py   Analysis, reviewed uploads, notifications, and revocation
+audit_public.py       Offline publication checks and shared secret-pattern detection
+tests/               Mocked safety and behavior checks
+examples/            Fictional source and metadata JSON examples
+run.sh               Thin CLI launcher
+PRIVACY.md           Data recipients, retention, consent, and deletion
+AUDIT.md             Dated review results and limitations
+requirements.txt     Pinned runtime dependencies
+```
 
-Código bajo [licencia MIT](LICENSE). Esta licencia no cubre tus vídeos, fuentes,
-marcas ni servicios de terceros. Proyecto independiente, sin afiliación ni
-respaldo de Google, YouTube o Telegram.
+Contributions should be focused, tested, and free of credentials or private
+media. The `.gitignore` is a publication allowlist: deliberately review and allow
+new files instead of forcing private files into Git. Do not post secrets in
+issues; revoke exposed credentials and coordinate remediation without sharing
+their values.
+
+## Project history and scope
+
+This edition derives from an earlier private prototype. Its public history was
+reconstructed into technical milestones to make review easier. Commit dates
+reflect preparation of the public edition, not the original private chronology.
+Do not merge the original private history or copy its profiles, logs, tokens,
+or backups into this repository.
+
+This is a local integration project, not a hosted service or a compliance
+certification. Offering it to other users requires appropriate consent, privacy,
+security, verification, and deletion processes. Previously shared credentials
+must be revoked with their providers; deleting local files does not invalidate
+sessions or remove external copies.
+
+Relevant provider policies:
+
+- NotebookLM: [terms and rights](https://support.google.com/notebooklm/answer/17004255)
+  and [Video Overview downloads](https://support.google.com/notebooklm/answer/16454555).
+- Gemini: [API terms, regional requirements, and data handling](https://ai.google.dev/gemini-api/terms).
+- YouTube: [terms](https://www.youtube.com/t/terms),
+  [API policies](https://developers.google.com/youtube/terms/developer-policies),
+  [minimum functionality](https://developers.google.com/youtube/terms/required-minimum-functionality),
+  [synthetic content](https://support.google.com/youtube/answer/14328491),
+  [made-for-kids content](https://support.google.com/youtube/answer/9528076),
+  [spam](https://support.google.com/youtube/answer/2801973), and
+  [monetization](https://support.google.com/youtube/answer/1311392).
+- Telegram: [Bot Platform developer terms](https://telegram.org/tos/bot-developers).
+- EU: [AI-generated content transparency](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act).
+
+## License
+
+The code is released under the [MIT license](LICENSE). This license does not
+grant rights to third-party videos, source material, trademarks, or services.
+Source to Screen is independent and is not affiliated with or endorsed by
+Google, YouTube, or Telegram.

@@ -1,8 +1,8 @@
 [
   {
-    "title": "Ejemplo ficticio: sustituye esta fuente antes de utilizar el programa",
+    "title": "Fictional example: replace this source before using the program",
     "url": "https://example.org/source",
-    "author": "Autor de ejemplo",
-    "license": "Indica la licencia real o el permiso obtenido; citar no equivale a tener permiso"
+    "author": "Example author",
+    "license": "Record the actual license or permission obtained; attribution is not permission"
   }
 ]

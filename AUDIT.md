@@ -1,83 +1,101 @@
-# Revisión de la edición pública
+# Public-edition review
 
-Revisión inicial: 2 de octubre de 2026. Actualización: 4 de octubre de 2026.
-Alcance: esta edición local, su contenido, objetos Git e índice; dependencias
-fijadas en `requirements.txt`. No es una certificación de seguridad ni un
-dictamen jurídico.
+Initial review: **October 2, 2026**. Latest documentation and localization update:
+**October 4, 2026**. Scope: this local public edition, its files, Git objects and
+index, and runtime dependencies pinned in `requirements.txt`. This report is
+not a security certification or legal opinion.
 
-## Cambios de publicación
+## Publication changes
 
-- Repositorio independiente, sin copiar el historial privado original.
-- No se incluyen credenciales, perfiles, cookies, sesiones, registros, capturas,
-  estadísticas personales, vídeos ni datos reales en los ejemplos.
-- Se retiran la automatización de NotebookLM, ocultación de bots, grounding con
-  Google Search, optimización basada en estadísticas y borrado automático.
-- Subida mediante API oficial con revisión, edición de metadatos, identificación
-  del canal, declaraciones explícitas y confirmación final. Privada por defecto,
-  sin publicación programada.
-- Archivos privados fuera del repositorio, permisos restringidos, comprobación
-  de permisos al leer credenciales y protección frente a enlaces simbólicos.
-- No se sobrescriben borradores. No se imprimen excepciones API privadas.
-- Intento de limpieza del archivo remoto de Gemini cuando se conoce su
-  identificador, incluso si falla el análisis; se avisa si la eliminación falla
-  o si una subida incierta puede haber dejado un archivo remoto sin identificar.
-- Revocación OAuth explícita y notificaciones Telegram sin metadatos ni errores.
-- Lista de publicación cerrada, licencia MIT, documentación de privacidad y
-  ejemplos ficticios sin claves de muestra reutilizables.
-- Pruebas con directorios temporales estándar, sin depender de una carpeta
-  propia de OpenCode; documentación del requisito regional de servicios de pago
-  en Gemini para clientes puestos a disposición de usuarios del EEE, Suiza o Reino Unido.
+- Independent repository, without copying the original private history.
+- No credentials, browser profiles, cookies, sessions, logs, screenshots,
+  personal statistics, videos, or real source data included in the examples.
+- NotebookLM browser automation, bot concealment, Google Search grounding,
+  statistics-based optimization, and automatic deletion removed.
+- Official API uploads with metadata editing, channel identification, explicit
+  declarations, and final confirmation. Private by default, with no publication
+  schedule.
+- Private files outside the repository, restricted permissions, credential
+  ownership and permission checks, and protections against symlink reads.
+- Drafts are not overwritten. Private API exception details are not printed.
+- Best-effort deletion of remote Gemini files when an identifier is known,
+  including after analysis failure. Warnings cover deletion failures and
+  uncertain uploads that may leave a remote file without a returned identifier.
+- Explicit OAuth revocation and Telegram notifications without video metadata
+  or private errors.
+- Closed publication allowlist, MIT license, privacy documentation, and fictional
+  examples without reusable sample keys.
+- Tests use standard temporary directories rather than a harness-specific path.
+  Regional Gemini Paid Services requirements are documented.
+- The interface, provider prompts, examples, and documentation are in English.
+  `ACCEPT`, `UPLOAD`, and `y/n` preserve explicit approval requirements. Content
+  defaults to English; `--language es` still supports Spanish.
 
-## Comprobaciones
+## Verification results
 
-- 17 pruebas offline superadas para límites de metadatos, fuentes/URLs, permisos, lectura de
-  archivos, cancelación previa y final, cuerpo exacto de subida, privacidad,
-  conservación del vídeo, errores privados, OAuth, revocación y limpieza Gemini,
-  incluidos fallos e interrupciones durante la subida y fallos de eliminación.
-- Sintaxis Python, shell y JSON; ejecución de la ayuda CLI.
-- Compatibilidad del esquema con el SDK instalado y de los campos con la
-  documentación de descubrimiento de YouTube, sin solicitudes a cuentas reales.
-- Auditoría de todos los archivos locales e índice, rutas históricas y todos
-  los blobs Git locales, incluidos objetos no alcanzables.
-- Detector independiente Gitleaks 8.30.1, con resultados redactados, aplicado
-  al directorio, historial alcanzable y contenido de todos los blobs y commits
-  locales, incluidos los no alcanzables: sin hallazgos.
-- En la revisión inicial, comparación con 120 huellas de valores privados
-  originales y variantes base64/hex: sin coincidencias. No se ha repetido en
-  esta actualización; los valores no se publican en este informe.
-- `pip check`: sin incompatibilidades en el entorno Linux/Python 3.12 probado.
-- En la revisión inicial, `pip-audit` sobre las 38 dependencias de ejecución
-  fijadas: sin vulnerabilidades conocidas. En esta actualización, consulta a
-  OSV para las mismas versiones: sin avisos aplicables. Las herramientas de
-  auditoría no se incluyen como dependencias del programa.
-- Integridad Git comprobada mediante `git fsck --full`.
+- The initial suite of 17 offline safety tests passed. The English edition adds
+  checks for explicit English confirmations and language selection, bringing
+  the suite to **19 tests**. Coverage includes metadata limits, source URLs,
+  file permissions, cancellation before and after authentication, exact upload
+  data, visibility, video preservation, private errors, OAuth, revocation, and
+  Gemini cleanup, including upload failures and interruptions.
+- Python, shell, and JSON syntax checked; CLI help exercised.
+- Metadata schema checked against the installed SDK and YouTube fields against
+  the bundled discovery document, without accessing provider accounts.
+- Working files, the Git index, historical paths, and every local Git blob,
+  including unreachable objects, checked by the included publication auditor.
+- Gitleaks 8.30.1 used with redacted output to complement the included scanner.
+  In the October 4 safety review, working files, reachable history, and all local
+  blob and commit contents, including unreachable objects, had no findings.
+- In the initial review, 120 fingerprints of original private values, including
+  base64 and hex variants, were compared with the public edition: no matches.
+  This comparison was not repeated for subsequent updates; no original secret
+  values are included in this report.
+- `pip check` found no incompatible requirements in the tested Linux/Python 3.12
+  environment.
+- In the initial review, `pip-audit` found no known vulnerabilities in the 38
+  pinned runtime dependencies. The October 4 safety update queried OSV for the
+  same versions and found no applicable advisories. These are dated findings,
+  not a permanent assurance; auditing tools are not runtime dependencies.
+- Git integrity checked with `git fsck --full`.
 
-Repite las pruebas y `python3 audit_public.py` después de cualquier cambio.
-Para una segunda comprobación independiente puedes instalar Gitleaks y ejecutar
-`gitleaks dir . --redact=100` y `gitleaks git . --log-opts=--all --redact=100`.
-Revisa las dependencias periódicamente: una consulta sin vulnerabilidades
-conocidas no demuestra que no existan vulnerabilidades.
+Repeat the tests and `python3 audit_public.py` after every change. For an
+independent check, install Gitleaks and run:
 
-## Límites y acciones externas
+```bash
+gitleaks dir . --redact=100
+gitleaks git . --log-opts=--all --redact=100
+```
 
-El auditor incluido no analiza secretos en mensajes o metadatos de commits ni
-tags; no se ha ampliado en esta actualización. El control independiente de
-Gitleaks complementa ese límite, sin demostrar la ausencia de todo secreto.
-La limpieza de Gemini es un intento, no una garantía: una subida incierta o una
-terminación forzada puede dejar un archivo remoto, como explica `PRIVACY.md`.
+Review dependencies periodically. The absence of known advisories does not
+prove that vulnerabilities do not exist.
 
-No se han utilizado credenciales reales ni se han generado o subido vídeos.
-La funcionalidad de servicios externos requiere una prueba consentida con una
-cuenta propia y sigue sujeta a disponibilidad, costes, permisos y políticas.
-No se ha publicado el repositorio ni configurado un remoto.
+## Limits and external actions
 
-El original sigue siendo **privado y no publicable**, porque su historial se
-conservó a petición de su propietario. Se eliminaron sus archivos privados de
-ejecución del directorio de trabajo, no el historial ni copias externas.
-No copies ni fusiones ese historial en esta edición.
+The included auditor does not inspect commit/tag messages or metadata for
+secrets. Gitleaks and manual history review complement that limitation; neither
+proves the absence of every possible secret format.
 
-Las sesiones o credenciales previamente compartidas deben revocarse en Google
-y, si corresponde, regenerarse en Google Cloud y BotFather. Esta preparación
-no invalida tokens o cookies en los servidores, ni elimina respaldos, forks o
-copias de terceros. Tampoco garantiza derechos sobre tus fuentes, veracidad
-de los vídeos, clasificación correcta o monetización.
+Gemini cleanup is an attempt, not a guarantee. An uncertain upload or forceful
+termination can leave a remote file, as described in [PRIVACY.md](PRIVACY.md).
+No real provider credentials have been used for the documented application
+tests, and those tests have not generated or uploaded videos. Live integrations
+require a separately authorized test with your own account and remain subject
+to availability, costs, permissions, and provider policies.
+
+No remote was configured during the initial preparation. The sanitized public
+edition has since been published, and its commit attribution was corrected to
+the owner's GitHub identity using a public noreply address. The English update
+is a separate commit; it does not rewrite the earlier development milestones.
+
+The original **local private history remains unsuitable for publication**. It
+was retained at the owner's request. Private runtime files were removed from
+its working directory, not from that history or external copies. Do not copy
+or merge the original history into this edition.
+
+Previously shared sessions or credentials must be revoked with Google and,
+where applicable, regenerated through Google Cloud or BotFather. Preparing a
+repository does not invalidate server-side tokens or cookies or delete backups,
+forks, or third-party copies. It also does not establish rights to source
+material, video accuracy, correct content classification, or monetization
+eligibility.
