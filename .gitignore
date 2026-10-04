@@ -1,0 +1,17 @@
+# Publication allowlist: new files must be deliberately allowed before committing.
+*
+!/.gitignore
+!/.env.example
+!/README.md
+!/PRIVACY.md
+!/AUDIT.md
+!/LICENSE
+!/requirements.txt
+!/run.sh
+!/youtube_pipeline.py
+!/audit_public.py
+!/tests/
+!/tests/test_pipeline.py
+!/examples/
+!/examples/metadata.example.json
+!/examples/sources.example.json
