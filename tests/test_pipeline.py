@@ -4,12 +4,14 @@ import copy
 import io
 import json
 from pathlib import Path
+import struct
 import stat
 import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import MagicMock, Mock, patch
+import zlib
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -331,6 +333,35 @@ class SafetyChecks(unittest.TestCase):
         fake = ("AI" + "za" + "X" * 35).encode()
         self.assertIn("Google API credential", audit_public.findings(fake))
         self.assertEqual(audit_public.findings(b"GEMINI_API_KEY=\n"), [])
+
+    def test_public_screenshot_is_valid_png_without_embedded_metadata(self):
+        screenshot = (Path(__file__).resolve().parents[1] / "docs/assets/channel-showcase.png").read_bytes()
+        self.assertTrue(audit_public.valid_public_png(screenshot))
+
+        def chunk(kind, payload):
+            return (struct.pack(">I", len(payload)) + kind + payload
+                    + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF))
+
+        offset = 8
+        chunks = []
+        while offset < len(screenshot):
+            end = offset + 12 + struct.unpack_from(">I", screenshot, offset)[0]
+            kind = screenshot[offset + 4:offset + 8]
+            chunks.append(screenshot[offset:end])
+            offset = end
+        metadata_bearing = screenshot[:8] + chunks[0] + chunk(b"tEXt", b"Author\x00Private") + b"".join(chunks[1:])
+        self.assertFalse(audit_public.valid_public_png(metadata_bearing))
+        self.assertFalse(audit_public.valid_public_png(screenshot + b"trailing-data"))
+
+    def test_workflow_svg_has_no_scripts_or_external_references(self):
+        import xml.etree.ElementTree as ET
+        svg = ET.fromstring((Path(__file__).resolve().parents[1] / "docs/assets/workflow.svg").read_text())
+        self.assertTrue(svg.tag.endswith("svg"))
+        for element in svg.iter():
+            self.assertNotIn(element.tag.rsplit("}", 1)[-1].lower(), {"script", "foreignobject"})
+            self.assertFalse(any(key.lower().startswith("on") for key in element.attrib))
+            self.assertFalse(any(key.rsplit("}", 1)[-1].lower() == "href" and not value.startswith("#")
+                                 for key, value in element.attrib.items()))
 
 
 if __name__ == "__main__":

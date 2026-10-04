@@ -15,3 +15,7 @@
 !/examples/
 !/examples/metadata.example.json
 !/examples/sources.example.json
+!/docs/
+!/docs/assets/
+!/docs/assets/workflow.svg
+!/docs/assets/channel-showcase.png

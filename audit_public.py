@@ -4,8 +4,11 @@ import ast
 import json
 from pathlib import Path
 import re
+import struct
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
+import zlib
 
 
 ROOT = Path(__file__).resolve().parent
@@ -24,6 +27,38 @@ SECRET_PATTERNS = {
 
 def findings(data):
     return [category for category, pattern in SECRET_PATTERNS.items() if re.search(pattern, data)]
+
+
+def valid_public_png(data):
+    if not data.startswith(b"\x89PNG\r\n\x1a\n") or len(data) > 10 * 1024 * 1024:
+        return False
+    offset = 8
+    chunks = []
+    while offset + 12 <= len(data):
+        length = struct.unpack_from(">I", data, offset)[0]
+        end = offset + 12 + length
+        if end > len(data):
+            return False
+        kind = data[offset + 4:offset + 8]
+        if kind not in {b"IHDR", b"IDAT", b"IEND"}:
+            return False
+        payload = data[offset + 8:offset + 8 + length]
+        checksum = struct.unpack_from(">I", data, offset + 8 + length)[0]
+        if zlib.crc32(kind + payload) & 0xFFFFFFFF != checksum:
+            return False
+        chunks.append(kind)
+        if kind == b"IHDR":
+            if chunks != [b"IHDR"] or length != 13:
+                return False
+            width, height = struct.unpack_from(">II", payload)
+            if not (1 <= width <= 4000 and 1 <= height <= 4000):
+                return False
+        if kind == b"IEND":
+            return (length == 0 and end == len(data) and chunks[0] == b"IHDR"
+                    and b"IDAT" in chunks and chunks.count(b"IHDR") == 1
+                    and chunks.count(b"IEND") == 1)
+        offset = end
+    return False
 
 
 def git(*arguments):
@@ -48,12 +83,29 @@ def audit():
             data = path.read_bytes()
             failures.extend((relative, category) for category in findings(data))
             try:
-                text = data.decode("utf-8")
-                if path.suffix == ".py":
-                    ast.parse(text, filename=relative)
-                if path.suffix == ".json":
-                    json.loads(text)
-            except (UnicodeError, SyntaxError, ValueError):
+                if path.suffix == ".png":
+                    if relative != "docs/assets/channel-showcase.png" or not valid_public_png(data):
+                        failures.append((relative, "invalid or metadata-bearing public PNG"))
+                else:
+                    text = data.decode("utf-8")
+                    if path.suffix == ".py":
+                        ast.parse(text, filename=relative)
+                    if path.suffix == ".json":
+                        json.loads(text)
+                    if path.suffix == ".svg":
+                        root = ET.fromstring(text)
+                        if not root.tag.endswith("svg"):
+                            failures.append((relative, "invalid SVG root"))
+                        for element in root.iter():
+                            if element.tag.rsplit("}", 1)[-1].lower() in {"script", "foreignobject"}:
+                                failures.append((relative, "active SVG content is not allowed"))
+                            if any(key.lower().startswith("on") for key in element.attrib):
+                                failures.append((relative, "SVG event handlers are not allowed"))
+                            if any(key.rsplit("}", 1)[-1].lower() == "href"
+                                   and not value.startswith("#")
+                                   for key, value in element.attrib.items()):
+                                failures.append((relative, "external SVG references are not allowed"))
+            except (UnicodeError, SyntaxError, ET.ParseError, ValueError):
                 failures.append((relative, "non-text or invalid source/example"))
     example = ROOT / ".env.example"
     for line in example.read_text().splitlines():

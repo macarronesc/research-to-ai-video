@@ -9,6 +9,8 @@ loop without sharing video details.
 
 Python 3.11+ · Linux · [MIT license](LICENSE)
 
+![Workflow overview: source review, manual NotebookLM video creation, optional Gemini drafting, human review, approved YouTube upload, and optional Telegram notification.](docs/assets/workflow.svg)
+
 ## Why this project
 
 Preparing a video for publication involves more than generating its content.
@@ -32,26 +34,15 @@ The project demonstrates practical integration of asynchronous AI file processin
 OAuth, resumable media uploads, consent checkpoints, and publication auditing.
 It does **not** independently verify facts, source licenses, or monetization eligibility.
 
-## Workflow
+## Workflow in practice
 
-```text
-Select and review sources
-          │
-          ▼
-NotebookLM: generate and download a Video Overview [manual]
-          │
-          ▼
-Gemini API: analyze the local video and draft metadata [optional]
-          │
-          ▼
-Watch the video, check facts and rights, edit the JSON [manual]
-          │
-          ▼
-YouTube Data API: identify channel → review settings → confirm upload
-          │
-          ▼
-Telegram Bot API: send a generic completion notice [optional]
-```
+This screenshot shows the project author's channel and example videos published
+using an earlier version of the workflow. Captured on **October 4, 2026**; the
+subscriber and video counts are a point-in-time snapshot and will change.
+
+![Cropped screenshot of The Universe of Why, with its channel banner, channel details, and a row of published video thumbnails.](docs/assets/channel-showcase.png)
+
+## Workflow boundaries
 
 **NotebookLM generation and download are manual.** This public edition does not
 automate the NotebookLM website, use private APIs, scrape services, conceal bots,

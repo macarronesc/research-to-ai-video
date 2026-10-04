@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" role="img" aria-labelledby="title description">
+  <title id="title">Research to AI Video: human-reviewed publishing workflow</title>
+  <desc id="description">Six stages: review sources, manually create a video in NotebookLM, optionally draft metadata with Gemini, review and edit, approve an upload through the YouTube API, and optionally send a generic Telegram notification. YouTube uploads are private by default and require explicit approval.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6f8ff"/>
+      <stop offset="1" stop-color="#eef3fa"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#26324a" flood-opacity=".09"/>
+    </filter>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0L9 4.5 0 9z" fill="#8b96ad"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="520" rx="28" fill="url(#background)"/>
+  <circle cx="1500" cy="50" r="155" fill="#7865df" opacity=".045"/>
+  <circle cx="90" cy="440" r="145" fill="#5267e8" opacity=".04"/>
+
+  <text x="800" y="58" text-anchor="middle" fill="#172033" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="31" font-weight="700">From research to a reviewed release</text>
+  <text x="800" y="94" text-anchor="middle" fill="#566176" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17">A local workflow that keeps source checks and publishing decisions with the creator</text>
+
+  <g stroke="#8b96ad" stroke-width="2.5" marker-end="url(#arrow)">
+    <path d="M270 260h31"/>
+    <path d="M526 260h31"/>
+    <path d="M782 260h31"/>
+    <path d="M1038 260h31"/>
+    <path d="M1294 260h31"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Inter,Segoe UI,Arial,sans-serif">
+    <g transform="translate(54 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#6682b6"/>
+      <circle cx="29" cy="35" r="16" fill="#edf2fa"/>
+      <text x="29" y="41" text-anchor="middle" fill="#51698f" font-size="16" font-weight="700">1</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">Review sources</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Select public material;</tspan><tspan x="19" dy="21">check rights and credits.</tspan></text>
+      <rect x="17" y="171" width="103" height="27" rx="13.5" fill="#edf2fa"/>
+      <text x="68" y="189" text-anchor="middle" fill="#51698f" font-size="11.5" font-weight="700" letter-spacing=".5">HUMAN-LED</text>
+    </g>
+    <g transform="translate(310 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#df9d47"/>
+      <circle cx="29" cy="35" r="16" fill="#fff3df"/>
+      <text x="29" y="41" text-anchor="middle" fill="#a86d20" font-size="16" font-weight="700">2</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">NotebookLM</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Create and download the</tspan><tspan x="19" dy="21">Video Overview manually.</tspan></text>
+      <rect x="17" y="171" width="81" height="27" rx="13.5" fill="#fff3df"/>
+      <text x="57.5" y="189" text-anchor="middle" fill="#a86d20" font-size="11.5" font-weight="700" letter-spacing=".5">MANUAL</text>
+    </g>
+    <g transform="translate(566 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#5267e8"/>
+      <circle cx="29" cy="35" r="16" fill="#eef0ff"/>
+      <text x="29" y="41" text-anchor="middle" fill="#5267e8" font-size="16" font-weight="700">3</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">Gemini API</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Draft metadata from the</tspan><tspan x="19" dy="21">video, with consent.</tspan></text>
+      <rect x="17" y="171" width="82" height="27" rx="13.5" fill="#eef0ff"/>
+      <text x="58" y="189" text-anchor="middle" fill="#5267e8" font-size="11.5" font-weight="700" letter-spacing=".5">OPTIONAL</text>
+    </g>
+    <g transform="translate(822 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#2c9b82"/>
+      <circle cx="29" cy="35" r="16" fill="#e7f7f1"/>
+      <text x="29" y="41" text-anchor="middle" fill="#26846f" font-size="16" font-weight="700">4</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">Human review</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Watch, fact-check, and</tspan><tspan x="19" dy="21">edit the metadata.</tspan></text>
+      <rect x="17" y="171" width="103" height="27" rx="13.5" fill="#e7f7f1"/>
+      <text x="68" y="189" text-anchor="middle" fill="#26846f" font-size="11.5" font-weight="700" letter-spacing=".5">REQUIRED</text>
+    </g>
+    <g transform="translate(1078 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#d95664"/>
+      <circle cx="29" cy="35" r="16" fill="#fff0f0"/>
+      <text x="29" y="41" text-anchor="middle" fill="#b54652" font-size="16" font-weight="700">5</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">YouTube API</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Review channel, visibility,</tspan><tspan x="19" dy="21">then explicitly approve.</tspan></text>
+      <rect x="17" y="171" width="137" height="27" rx="13.5" fill="#fff0f0"/>
+      <text x="85.5" y="189" text-anchor="middle" fill="#b54652" font-size="11.5" font-weight="700" letter-spacing=".5">PRIVATE DEFAULT</text>
+    </g>
+    <g transform="translate(1334 151)">
+      <rect width="216" height="219" rx="19" fill="#fff"/>
+      <rect width="216" height="7" rx="4" fill="#778398"/>
+      <circle cx="29" cy="35" r="16" fill="#eef1f5"/>
+      <text x="29" y="41" text-anchor="middle" fill="#657185" font-size="16" font-weight="700">6</text>
+      <text x="19" y="84" fill="#172033" font-size="19" font-weight="700">Telegram</text>
+      <text x="19" y="115" fill="#566176" font-size="14.5"><tspan x="19">Send a generic completion</tspan><tspan x="19" dy="21">notice to your own chat.</tspan></text>
+      <rect x="17" y="171" width="82" height="27" rx="13.5" fill="#eef1f5"/>
+      <text x="58" y="189" text-anchor="middle" fill="#657185" font-size="11.5" font-weight="700" letter-spacing=".5">OPTIONAL</text>
+    </g>
+  </g>
+
+  <rect x="334" y="421" width="932" height="55" rx="27.5" fill="#fff" stroke="#dfe5ef"/>
+  <circle cx="370" cy="448.5" r="11" fill="#e7f7f1"/>
+  <path d="m365 448 4 4 7-8" fill="none" stroke="#26846f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="394" y="454" fill="#253149" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14.5" font-weight="600">Human approval before every upload</text>
+  <circle cx="760" cy="448.5" r="3" fill="#aab3c1"/>
+  <text x="780" y="454" fill="#566176" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">No scheduled publishing</text>
+  <circle cx="1006" cy="448.5" r="3" fill="#aab3c1"/>
+  <text x="1026" y="454" fill="#566176" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">No automatic deletion</text>
+</svg>

@@ -5,11 +5,18 @@ Initial review: **October 2, 2026**. Latest documentation and localization updat
 index, and runtime dependencies pinned in `requirements.txt`. This report is
 not a security certification or legal opinion.
 
+Visual assets were added on October 4, 2026: an original, static SVG workflow
+diagram and a cropped screenshot provided by the channel owner. The screenshot
+crop excludes YouTube's global navigation and signed-in account avatar; the PNG
+was re-encoded without embedded metadata. It intentionally shows the creator's
+public channel name, handle, videos, and point-in-time channel counts.
+
 ## Publication changes
 
 - Independent repository, without copying the original private history.
-- No credentials, browser profiles, cookies, sessions, logs, screenshots,
-  personal statistics, videos, or real source data included in the examples.
+- No credentials, browser profiles, cookies, sessions, or logs are included.
+  The single creator-provided public channel screenshot is cropped and
+  metadata-stripped as described above; examples contain no real source data.
 - NotebookLM browser automation, bot concealment, Google Search grounding,
   statistics-based optimization, and automatic deletion removed.
 - Official API uploads with metadata editing, channel identification, explicit
@@ -33,9 +40,10 @@ not a security certification or legal opinion.
 
 ## Verification results
 
-- The initial suite of 17 offline safety tests passed. The English edition adds
-  checks for explicit English confirmations and language selection, bringing
-  the suite to **19 tests**. Coverage includes metadata limits, source URLs,
+- The initial suite of 17 offline safety tests passed. The English edition added
+  checks for explicit English confirmations and language selection. The visual
+  asset update added checks for PNG metadata stripping and safe SVG markup; the
+  current suite has **21 tests**. Coverage includes metadata limits, source URLs,
   file permissions, cancellation before and after authentication, exact upload
   data, visibility, video preservation, private errors, OAuth, revocation, and
   Gemini cleanup, including upload failures and interruptions.
@@ -45,8 +53,12 @@ not a security certification or legal opinion.
 - Working files, the Git index, historical paths, and every local Git blob,
   including unreachable objects, checked by the included publication auditor.
 - Gitleaks 8.30.1 used with redacted output to complement the included scanner.
-  In the October 4 safety review, working files, reachable history, and all local
-  blob and commit contents, including unreachable objects, had no findings.
+  In the October 4 safety review and after adding visuals, working files,
+  reachable history, and all local blob and commit contents, including
+  unreachable objects, had no findings.
+- The publication auditor validates the showcase PNG's structure, dimensions,
+  checksums, and absence of metadata chunks. It parses the workflow SVG and
+  rejects scripts, event handlers, and external references.
 - In the initial review, 120 fingerprints of original private values, including
   base64 and hex variants, were compared with the public edition: no matches.
   This comparison was not repeated for subsequent updates; no original secret
