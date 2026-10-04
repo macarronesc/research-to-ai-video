@@ -194,3 +194,173 @@ def analyze(args):
                           "Revísalo en tu cuenta; no se muestran detalles privados.", file=sys.stderr)
     print("Borrador guardado. Revisa el vídeo, los hechos y los derechos, y edita el JSON antes de subirlo.")
 
+
+def youtube_service():
+    from google.auth.transport.requests import Request as GoogleRequest
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from googleapiclient.discovery import build
+
+    token = CONFIG_DIR / "token.json"
+    credentials = None
+    if token.exists():
+        credentials = Credentials.from_authorized_user_info(read_json(token, private=True))
+        if not credentials.has_scopes(SCOPES):
+            raise ValueError("Revoke the old authorization before requesting different scopes")
+        if not credentials.valid and credentials.refresh_token:
+            credentials.refresh(GoogleRequest())
+    if credentials is None:
+        secrets = read_json(CONFIG_DIR / "client_secret.json", private=True)
+        if set(secrets) != {"installed"}:
+            raise ValueError("Create an OAuth client of type Desktop app")
+        flow = InstalledAppFlow.from_client_config(secrets, SCOPES)
+        credentials = flow.run_local_server(
+            port=0, authorization_prompt_message="",
+            timeout_seconds=600,
+            success_message="Autorización completada. Puedes cerrar esta ventana.",
+        )
+    if not credentials.valid:
+        raise ValueError("Authorization is not valid")
+    write_private_json(token, json.loads(credentials.to_json()), replace=True)
+    return build("youtube", "v3", credentials=credentials, cache_discovery=False)
+
+
+def choose_boolean(message):
+    answer = input(f"{message} (s/n, sin valor por defecto): ").strip().lower()
+    if answer not in ("s", "n"):
+        raise ValueError("An explicit s/n answer is required")
+    return answer == "s"
+
+
+def upload_body(metadata, language, privacy, made_for_kids, synthetic):
+    validate_metadata(metadata)
+    if language not in ("es", "en") or privacy not in ("private", "unlisted", "public"):
+        raise ValueError("Invalid language or visibility")
+    if type(made_for_kids) is not bool or type(synthetic) is not bool:
+        raise ValueError("Explicit content declarations are required")
+    return {
+        "snippet": {
+            "title": metadata["title"], "description": metadata["description"],
+            "tags": metadata["tags"], "categoryId": "27",
+            "defaultLanguage": language, "defaultAudioLanguage": language,
+        },
+        "status": {
+            "privacyStatus": privacy, "selfDeclaredMadeForKids": made_for_kids,
+            "containsSyntheticMedia": synthetic,
+        },
+    }
+
+
+def notify_telegram():
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat:
+        return
+    # Send no metadata, video URLs, paths, API responses or exception messages.
+    payload = urlencode({"chat_id": chat, "text": "Subida revisada a YouTube completada."}).encode()
+    try:
+        request = Request(f"https://api.telegram.org/bot{token}/sendMessage", data=payload)
+        with urlopen(request, timeout=15) as response:
+            result = json.load(response)
+            if result.get("ok") is not True:
+                raise ValueError("Notification failed")
+    except Exception:
+        print("Aviso: no se pudo enviar la notificación. El vídeo no se elimina.", file=sys.stderr)
+
+
+def upload(args):
+    video = video_path(args.video)
+    metadata = validate_metadata(read_json(args.metadata))
+    print("Revisa las fuentes y sus atribuciones; inclúyelas en la descripción cuando corresponda:")
+    print(json.dumps(metadata, ensure_ascii=False, indent=2))
+    metadata["title"] = input("Nuevo título [Enter conserva el borrador]: ") or metadata["title"]
+    new_description = input("Nueva descripción [Enter conserva; usa \\n para saltos]: ")
+    if new_description:
+        metadata["description"] = new_description.replace("\\n", "\n")
+    privacy = input("Privacidad: private / unlisted / public [private]: ").strip() or "private"
+    kids = choose_boolean("¿Este vídeo está creado para niños? https://support.google.com/youtube/answer/9528076")
+    synthetic = choose_boolean("¿Requiere aviso de contenido sintético? https://support.google.com/youtube/answer/14328491")
+    body = upload_body(metadata, args.language, privacy, kids, synthetic)
+    confirm("He visto el vídeo completo y revisado sus hechos, fuentes, atribuciones, derechos "
+            "y declaraciones. Acepto PRIVACY.md y los términos de YouTube: "
+            "https://www.youtube.com/t/terms. Autorizo enviar el vídeo a YouTube y, si he "
+            "configurado Telegram, enviar una notificación genérica a ese chat.")
+    youtube = youtube_service()
+    channels = youtube.channels().list(part="snippet", mine=True).execute().get("items", [])
+    if len(channels) != 1:
+        raise ValueError("Cannot unambiguously identify the authorized channel")
+    channel = channels[0]
+    print("Canal autorizado:", json.dumps({"id": channel["id"], "title": channel["snippet"]["title"]},
+                                         ensure_ascii=False))
+    print("Datos EXACTOS que se enviarán a YouTube:")
+    print(json.dumps(body, ensure_ascii=False, indent=2))
+    if input("Escribe SUBIR para autorizar esta subida con estos datos: ").strip() != "SUBIR":
+        raise ValueError("Upload cancelled")
+    from googleapiclient.http import MediaFileUpload
+
+    request = youtube.videos().insert(
+        part="snippet,status", body=body,
+        media_body=MediaFileUpload(str(video), mimetype=mimetypes.guess_type(video.name)[0],
+                                   chunksize=8 * 1024 * 1024, resumable=True),
+    )
+    response = None
+    while response is None:
+        _, response = request.next_chunk()
+    video_id = response.get("id")
+    if not isinstance(video_id, str) or len(video_id) != 11 or not all(
+            char.isascii() and (char.isalnum() or char in "_-") for char in video_id):
+        raise ValueError("Unexpected upload response; check YouTube Studio before retrying")
+    print(f"Vídeo subido: https://www.youtube.com/watch?v={video_id}")
+    print("No se ha programado su publicación ni eliminado ningún archivo local o notebook.")
+    notify_telegram()
+
+
+def revoke(args):
+    token_path = CONFIG_DIR / "token.json"
+    if not token_path.exists():
+        print("No hay un token local que revocar.")
+        return
+    confirm("Revocaré el acceso OAuth de esta aplicación y borraré su token local. "
+            "No se eliminarán vídeos ni datos de YouTube.")
+    token = read_json(token_path, private=True)
+    value = token.get("refresh_token") or token.get("token")
+    if not value:
+        raise ValueError("No revocable token found; use Google's security settings")
+    request = Request("https://oauth2.googleapis.com/revoke", data=urlencode({"token": value}).encode())
+    with urlopen(request, timeout=30) as response:
+        if response.status != 200:
+            raise ValueError("Revocation was not confirmed")
+    token_path.unlink()
+    print("Acceso revocado y token local eliminado. Los borradores locales se conservan bajo tu control.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    analysis = commands.add_parser("analyze", help="Send an approved local video to Gemini")
+    analysis.add_argument("video")
+    analysis.add_argument("--sources", required=True, help="JSON list of reviewed sources")
+    analysis.add_argument("--output", default=str(DATA_DIR / "metadata.json"))
+    analysis.add_argument("--language", choices=("es", "en"), default="es")
+    analysis.set_defaults(function=analyze)
+    uploading = commands.add_parser("upload", help="Review and authorize one YouTube upload")
+    uploading.add_argument("video")
+    uploading.add_argument("--metadata", default=str(DATA_DIR / "metadata.json"))
+    uploading.add_argument("--language", choices=("es", "en"), default="es")
+    uploading.set_defaults(function=upload)
+    revocation = commands.add_parser("revoke", help="Revoke this application's saved OAuth token")
+    revocation.set_defaults(function=revoke)
+    args = parser.parse_args()
+    try:
+        args.function(args)
+        return 0
+    except (Exception, KeyboardInterrupt):
+        # API errors and OAuth/Telegram URLs can contain credentials. Never print the exception.
+        print("Operación cancelada o fallida. No se muestran respuestas ni errores privados. "
+              "Comprueba configuración, archivos y cuotas; si estabas subiendo, revisa "
+              "YouTube Studio antes de reintentarlo. No se elimina tu vídeo.", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
