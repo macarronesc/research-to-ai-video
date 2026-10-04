@@ -1,4 +1,4 @@
-# Source to Screen
+# Research to AI Video
 
 **AI-assisted video publishing with human review at every publishing boundary.**
 
@@ -15,7 +15,7 @@ Preparing a video for publication involves more than generating its content.
 Metadata needs editing, sources need attribution, the correct account needs
 authorization, and visibility and content disclosures need deliberate choices.
 
-Source to Screen automates the repeatable API work while keeping those editorial
+Research to AI Video automates the repeatable API work while keeping those editorial
 decisions with the person publishing. It is a local, human-in-the-loop workflow,
 not an unattended content-generation service.
 
@@ -318,5 +318,5 @@ Relevant provider policies:
 
 The code is released under the [MIT license](LICENSE). This license does not
 grant rights to third-party videos, source material, trademarks, or services.
-Source to Screen is independent and is not affiliated with or endorsed by
+Research to AI Video is independent and is not affiliated with or endorsed by
 Google, YouTube, or Telegram.
